@@ -1,4 +1,5 @@
 import { Notice, Plugin } from 'obsidian';
+import { FilterConfig } from './filterConfig';
 import { EMPTY_SETTINGS, RandomNotePluginSettings } from './pluginSettings';
 import { RandomNoteSettingTab } from './settingTab';
 
@@ -30,14 +31,25 @@ export default class RandomNotePlugin extends Plugin {
 	private async activate() {
 		try {
 			const leaf = this.app.workspace.getLeaf(false);
-			leaf.openFile(this.selectRandomNote());
+			leaf.openFile(this.selectRandomNote(this.getFilterConfig()));
 		} catch (e) {
 			new Notice(e);
 		}
 	}
 
-	private selectRandomNote() {
+	private getFilterConfig(): FilterConfig {
+		const filter = this.settings.filters[this.settings.currentFilterIndex];
+		if (filter === undefined) {
+			throw new Error(`Filter index ${this.settings.currentFilterIndex} is invalid`);
+		}
+		return filter;
+	}
+
+	private selectRandomNote(filterConfig: FilterConfig) {
 		let files = this.app.vault.getMarkdownFiles();
+		if (filterConfig.paths.length !== 0) {
+			files = files.filter((file) => filterConfig.paths.some((path) => file.path.startsWith(path)));
+		}
 		if (files.length === 0) {
 			throw new Error("No notes found");
 		}
