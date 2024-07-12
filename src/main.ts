@@ -1,6 +1,10 @@
 import { Notice, Plugin } from 'obsidian';
+import { EMPTY_SETTINGS, RandomNotePluginSettings } from './pluginSettings';
+import { RandomNoteSettingTab } from './settingTab';
 
-export default class MyPlugin extends Plugin {
+export default class RandomNotePlugin extends Plugin {
+	settings: RandomNotePluginSettings;
+
 	private previousPath = "";
 
 	async onload() {
@@ -9,15 +13,18 @@ export default class MyPlugin extends Plugin {
 		this.addRibbonIcon('dice', 'Open Random Note', () => {
 			this.activate();
 		});
+		this.addSettingTab((new RandomNoteSettingTab(this.app, this)));
 	}
 
 	onunload() {
 	}
 
 	async loadSettings() {
+		this.settings = Object.assign(structuredClone(EMPTY_SETTINGS), await this.loadData());
 	}
 
 	async saveSettings() {
+		await this.saveData(this.settings);
 	}
 
 	private async activate() {
